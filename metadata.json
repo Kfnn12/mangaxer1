@@ -1,0 +1,6 @@
+{
+  "name": "MangaNow API & Explorer",
+  "description": "A full-stack application that scrapes MangaNow to provide a functioning REST API and an interactive explorer UI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
