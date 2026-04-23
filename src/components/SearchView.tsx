@@ -3,6 +3,7 @@ import { api, type SearchData } from '../api';
 import { MangaCard } from './MangaCard';
 import { Loader2, SearchX } from 'lucide-react';
 import { ErrorDisplay } from './ErrorDisplay';
+import { AdvancedFilters } from './AdvancedFilters';
 import { toast } from 'sonner';
 
 interface SearchViewProps {
@@ -14,18 +15,19 @@ export function SearchView({ query, onSelectManga }: SearchViewProps) {
   const [data, setData] = useState<SearchData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sort, setSort] = useState('default');
 
   const performSearch = useCallback(() => {
     setLoading(true);
     setError(null);
-    api.search(query)
+    api.search(query, sort)
       .then(setData)
       .catch((e) => {
          setError(e.message);
          toast.error("Search Failed", { description: e.message });
       })
       .finally(() => setLoading(false));
-  }, [query]);
+  }, [query, sort]);
 
   useEffect(() => {
     performSearch();
@@ -61,11 +63,16 @@ export function SearchView({ query, onSelectManga }: SearchViewProps) {
 
   return (
     <section className="flex-1 flex flex-col gap-8">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
         <h2 className="text-xl font-black italic tracking-wider flex items-center gap-2">
           <span className="w-1 h-6 bg-orange-600 rounded-full"></span>
           SEARCH: <span className="text-orange-600">"{query}"</span>
         </h2>
+        <AdvancedFilters 
+          sort={sort} 
+          setSort={setSort} 
+          showStatus={false} 
+        />
       </div>
       <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {data.results.map((manga, i) => (

@@ -10,7 +10,7 @@ app.use(express.json());
 const globalRatings: Record<string, { sum: number, count: number }> = {};
 
 // Helper to parse manga items
-function parseMangaItems($: cheerio.CheerioAPI, elements: cheerio.Cheerio<cheerio.Element>) {
+function parseMangaItems($: cheerio.CheerioAPI, elements: cheerio.Cheerio<any>) {
   const list: any[] = [];
   elements.each((_, el) => {
     const container = $(el);
@@ -130,6 +130,7 @@ app.get("/api/manga/latest", async (req, res) => {
 app.get("/api/manga/search", async (req, res) => {
   try {
     const query = req.query.q as string;
+    const sort = (req.query.sort as string) || '';
     if (!query) {
       return res.status(400).json({ success: false, error: "Query 'q' is required" });
     }
@@ -138,7 +139,14 @@ app.get("/api/manga/search", async (req, res) => {
     const html = await response.text();
     const $ = cheerio.load(html);
 
-    const items = parseMangaItems($, $('.manga-poster').parent());
+    let items = parseMangaItems($, $('.manga-poster').parent());
+
+    // Local override for search sorting (Manganow ignores search sort)
+    if (sort === 'score' || sort === 'most-viewed') {
+       items = items.sort((a, b) => (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0));
+    } else if (sort === 'name-az') {
+       items = items.sort((a, b) => a.title.localeCompare(b.title));
+    }
 
     res.json({ success: true, results: items });
   } catch (error: any) {
@@ -151,11 +159,18 @@ app.get("/api/manga/genre", async (req, res) => {
   try {
     const genre = req.query.genre as string;
     const page = req.query.page || 1;
+    const sort = (req.query.sort as string) || 'default';
+    const status = (req.query.status as string) || 'all';
+
     if (!genre) {
       return res.status(400).json({ success: false, error: "Query 'genre' is required" });
     }
 
-    const response = await fetch(`https://manganow.to/genre/${encodeURIComponent(genre)}?page=${page}`);
+    let url = `https://manganow.to/genre/${encodeURIComponent(genre)}?page=${page}`;
+    if (sort !== 'default') url += `&sort=${sort}`;
+    if (status !== 'all') url += `&status=${status}`;
+
+    const response = await fetch(url);
     const html = await response.text();
     const $ = cheerio.load(html);
 
@@ -306,6 +321,14 @@ app.get("/api/manga/:id", async (req, res) => {
       }
     });
 
+    // Related manga extraction
+    let related: any[] = [];
+    const relatedHeading = $('h2:contains("You May Also Like")');
+    if (relatedHeading.length > 0) {
+      const relatedSection = relatedHeading.closest('.block_area').find('.manga-poster').parent();
+      related = parseMangaItems($, relatedSection);
+    }
+
     res.json({
       success: true,
       data: {
@@ -315,7 +338,8 @@ app.get("/api/manga/:id", async (req, res) => {
         description,
         rating,
         details,
-        chapters
+        chapters,
+        related
       }
     });
   } catch (error: any) {

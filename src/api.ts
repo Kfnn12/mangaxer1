@@ -29,6 +29,7 @@ export interface MangaDetails {
   rating?: string;
   details: Record<string, string>;
   chapters: { title: string, url: string, date: string }[];
+  related?: MangaItem[];
 }
 
 export const api = {
@@ -39,15 +40,22 @@ export const api = {
     return { trending: json.trending, latest: json.latest };
   },
 
-  search: async (query: string): Promise<SearchData> => {
-    const res = await fetch(`/api/manga/search?q=${encodeURIComponent(query)}`);
+  search: async (query: string, sort: string = 'default'): Promise<SearchData> => {
+    let url = `/api/manga/search?q=${encodeURIComponent(query)}`;
+    if (sort !== 'default') url += `&sort=${sort}`;
+    
+    const res = await fetch(url);
     if (!res.ok) throw new Error("Failed to search manga");
     const json = await res.json();
     return { results: json.results };
   },
 
-  getGenre: async (genre: string, page: number = 1): Promise<SearchData> => {
-    const res = await fetch(`/api/manga/genre?genre=${encodeURIComponent(genre)}&page=${page}`);
+  getGenre: async (genre: string, page: number = 1, sort: string = 'default', status: string = 'all'): Promise<SearchData> => {
+    let url = `/api/manga/genre?genre=${encodeURIComponent(genre)}&page=${page}`;
+    if (sort !== 'default') url += `&sort=${sort}`;
+    if (status !== 'all') url += `&status=${status}`;
+
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`Failed to fetch genre ${genre}`);
     const json = await res.json();
     if (!json.success) throw new Error(json.error || `Failed to fetch genre ${genre}`);

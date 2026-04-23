@@ -3,6 +3,7 @@ import { api, type MangaItem } from '../api';
 import { MangaCard } from './MangaCard';
 import { Loader2, LayoutGrid, ArrowLeft } from 'lucide-react';
 import { ErrorDisplay } from './ErrorDisplay';
+import { AdvancedFilters } from './AdvancedFilters';
 import { toast } from 'sonner';
 
 interface GenreViewProps {
@@ -17,6 +18,8 @@ export function GenreView({ genre, onSelectManga, onBackToGenres }: GenreViewPro
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState('default');
+  const [status, setStatus] = useState('all');
 
   const fetchGenreMode = useCallback(async (pageNum: number, isLoadMore: boolean = false) => {
     if (isLoadMore) setLoadingMore(true);
@@ -24,7 +27,7 @@ export function GenreView({ genre, onSelectManga, onBackToGenres }: GenreViewPro
     setError(null);
     
     try {
-      const response = await api.getGenre(genre, pageNum);
+      const response = await api.getGenre(genre, pageNum, sort, status);
       if (isLoadMore) {
         setData(prev => [...prev, ...response.results]);
       } else {
@@ -37,7 +40,7 @@ export function GenreView({ genre, onSelectManga, onBackToGenres }: GenreViewPro
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [genre]);
+  }, [genre, sort, status]);
 
   useEffect(() => {
     setPage(1);
@@ -81,18 +84,27 @@ export function GenreView({ genre, onSelectManga, onBackToGenres }: GenreViewPro
 
   return (
     <section className="flex-1 flex flex-col gap-8 pb-12">
-      <div className="flex items-center gap-4 mb-2">
-        <button 
-          onClick={onBackToGenres} 
-          className="p-2 hover:bg-white/10 rounded-full transition-colors text-zinc-400 hover:text-white"
-          title="Back to all genres"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h2 className="text-xl font-black italic tracking-wider flex items-center gap-2 uppercase">
-          <span className="w-1 h-6 bg-orange-600 rounded-full"></span>
-          GENRE: <span className="text-orange-500">{genre.replace(/-/g, ' ')}</span>
-        </h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={onBackToGenres} 
+            className="p-2 hover:bg-white/10 rounded-full transition-colors text-zinc-400 hover:text-white"
+            title="Back to all genres"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h2 className="text-xl font-black italic tracking-wider flex items-center gap-2 uppercase">
+            <span className="w-1 h-6 bg-orange-600 rounded-full"></span>
+            GENRE: <span className="text-orange-500">{genre.replace(/-/g, ' ')}</span>
+          </h2>
+        </div>
+        
+        <AdvancedFilters 
+          sort={sort} 
+          setSort={setSort} 
+          status={status} 
+          setStatus={setStatus} 
+        />
       </div>
       
       <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">

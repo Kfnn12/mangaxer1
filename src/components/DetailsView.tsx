@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { api, type MangaDetails } from '../api';
-import { Loader2, ArrowLeft, Calendar, FileText, ChevronLeft, ChevronRight, Play, ArrowUpDown } from 'lucide-react';
+import { Loader2, ArrowLeft, Calendar, FileText, ChevronLeft, ChevronRight, Play, ArrowUpDown, ImageIcon } from 'lucide-react';
 import { ChapterReader } from './ChapterReader';
 import { RatingStars } from './RatingStars';
 import { ErrorDisplay } from './ErrorDisplay';
@@ -10,19 +10,22 @@ interface DetailsViewProps {
   id: string;
   onBack: () => void;
   onSearch?: (query: string) => void;
+  onSelectManga: (id: string) => void;
 }
 
-export function DetailsView({ id, onBack, onSearch }: DetailsViewProps) {
+export function DetailsView({ id, onBack, onSearch, onSelectManga }: DetailsViewProps) {
   const [data, setData] = useState<MangaDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentChapterIndex, setCurrentChapterIndex] = useState<number>(0);
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [isReading, setIsReading] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const loadData = useCallback(() => {
     setLoading(true);
     setError(null);
+    setImgError(false);
     window.scrollTo(0, 0);
     api.getDetails(id)
       .then((res) => {
@@ -78,12 +81,23 @@ export function DetailsView({ id, onBack, onSearch }: DetailsViewProps) {
 
       <div className="relative rounded-3xl overflow-hidden shadow-2xl shrink-0 p-8 border border-white/5 bg-zinc-900/50 flex flex-col md:flex-row gap-8">
         {/* Cover */}
-        <div className="w-48 shrink-0 mx-auto md:mx-0 shadow-lg rounded overflow-hidden h-72 border border-white/10 relative">
-          <img 
-            src={data.image} 
-            alt={data.title} 
-            className="w-full h-full object-cover"
-          />
+        <div className="w-48 shrink-0 mx-auto md:mx-0 shadow-lg rounded overflow-hidden h-72 border border-white/10 relative bg-zinc-800">
+          {imgError || !data.image ? (
+            <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-zinc-500">
+              <ImageIcon className="h-10 w-10 mb-2 opacity-30" />
+              <span className="text-[10px] font-bold uppercase tracking-widest opacity-50">No Image</span>
+            </div>
+          ) : (
+            <img 
+              src={data.image} 
+              alt={data.title} 
+              onError={() => {
+                console.error(`Failed to load image for manga details: ${data.title} (${data.id}) - URL: ${data.image}`);
+                setImgError(true);
+              }}
+              className="w-full h-full object-cover"
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent"></div>
         </div>
         
@@ -119,8 +133,8 @@ export function DetailsView({ id, onBack, onSearch }: DetailsViewProps) {
 
           <div className="flex flex-wrap gap-2 mt-2">
             {Object.entries(data.details).slice(0, 5).map(([key, value]) => {
-                if (key.toLowerCase() === 'genres') {
-                  const genresList = value.split(',').map(g => g.trim());
+                if (key.toLowerCase() === 'genres' && typeof value === 'string') {
+                  const genresList = value.split(',').map((g: string) => g.trim());
                   return (
                     <div key={key} className="flex items-center gap-1.5 px-3 py-1 bg-black/40 border border-white/5 rounded text-xs text-zinc-400 font-medium">
                       <strong className="text-zinc-500 mr-1">{key}:</strong>
@@ -252,6 +266,27 @@ export function DetailsView({ id, onBack, onSearch }: DetailsViewProps) {
         </div>
       </div>
       
+      {data.related && data.related.length > 0 && (
+        <div className="mt-8 pt-8 border-t border-white/5">
+          <h2 className="text-xl font-black italic uppercase tracking-wider flex items-center gap-2 mb-6">
+            <span className="w-1 h-6 bg-orange-600 rounded-full"></span>
+            You May Also Like
+          </h2>
+          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {data.related.map((manga, i) => (
+              <MangaCard 
+                key={`related-${manga.id}-${i}`} 
+                manga={manga} 
+                onClick={(relatedId) => {
+                  window.scrollTo(0, 0);
+                  onSelectManga(relatedId);
+                }} 
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {isReading && data.chapters[currentChapterIndex] && (
         <ChapterReader 
           url={data.chapters[currentChapterIndex].url}

@@ -136,6 +136,7 @@ export default function App() {
             id={selectedMangaId} 
             onBack={() => setView('home')} 
             onSearch={triggerSearch}
+            onSelectManga={navigateToDetails}
           />
         )}
         
