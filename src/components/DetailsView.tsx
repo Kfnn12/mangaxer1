@@ -4,6 +4,7 @@ import { Loader2, ArrowLeft, Calendar, FileText, ChevronLeft, ChevronRight, Play
 import { ChapterReader } from './ChapterReader';
 import { RatingStars } from './RatingStars';
 import { ErrorDisplay } from './ErrorDisplay';
+import { MangaCard } from './MangaCard';
 import { toast } from 'sonner';
 
 interface DetailsViewProps {
