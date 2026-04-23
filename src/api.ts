@@ -17,6 +17,10 @@ export interface SearchData {
   results: MangaItem[];
 }
 
+export const GENRES = [
+  "action", "adventure", "animated", "anime", "cartoon", "comedy", "comic", "completed", "cooking", "detective", "doujinshi", "drama", "ecchi", "fantasy", "gender-bender", "harem", "historical", "horror", "isekai", "josei", "magic", "manga", "manhua", "manhwa", "martial-arts", "mature", "mecha", "military", "mystery", "one-shot", "psychological", "reincarnation", "romance", "school-life", "sci-fi", "seinen", "shoujo", "shoujo-ai", "shounen", "shounen-ai", "slice-of-life", "smut", "sports", "super-power", "supernatural", "thriller", "tragedy", "webtoon"
+];
+
 export interface MangaDetails {
   id: string;
   title: string;
@@ -39,6 +43,30 @@ export const api = {
     const res = await fetch(`/api/manga/search?q=${encodeURIComponent(query)}`);
     if (!res.ok) throw new Error("Failed to search manga");
     const json = await res.json();
+    return { results: json.results };
+  },
+
+  getGenre: async (genre: string, page: number = 1): Promise<SearchData> => {
+    const res = await fetch(`/api/manga/genre?genre=${encodeURIComponent(genre)}&page=${page}`);
+    if (!res.ok) throw new Error(`Failed to fetch genre ${genre}`);
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || `Failed to fetch genre ${genre}`);
+    return { results: json.results };
+  },
+
+  getAZList: async (letter: string): Promise<SearchData> => {
+    const res = await fetch(`/api/manga/az?k=${encodeURIComponent(letter)}`);
+    if (!res.ok) throw new Error("Failed to fetch A-Z list");
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || "Failed to fetch A-Z list");
+    return { results: json.results };
+  },
+
+  getLatest: async (page: number = 1): Promise<SearchData> => {
+    const res = await fetch(`/api/manga/latest?page=${page}`);
+    if (!res.ok) throw new Error("Failed to fetch latest updates");
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error || "Failed to fetch latest updates");
     return { results: json.results };
   },
 

@@ -8,9 +8,10 @@ import { HeroCarousel } from './HeroCarousel';
 
 interface HomeViewProps {
   onSelectManga: (id: string) => void;
+  onViewLatest?: () => void;
 }
 
-export function HomeView({ onSelectManga }: HomeViewProps) {
+export function HomeView({ onSelectManga, onViewLatest }: HomeViewProps) {
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -95,29 +96,41 @@ export function HomeView({ onSelectManga }: HomeViewProps) {
       )}
 
       {data?.latest && data.latest.length > 0 && (
-        <section className="flex-1">
+        <section className="flex-1 border border-white/5 bg-white/[0.02] p-6 rounded-2xl">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-black italic uppercase tracking-wider flex items-center gap-2">
-              <span className="w-1 h-6 bg-orange-600 rounded-full"></span>
-              Latest Updates
-            </h2>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => setLatestPage(Math.max(0, latestPage - 1))}
-                disabled={latestPage === 0}
-                className="p-1.5 rounded border border-white/10 bg-zinc-900 text-zinc-400 hover:text-orange-500 hover:border-orange-500/50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                title="Previous"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button 
-                onClick={() => setLatestPage(Math.min(Math.ceil(data.latest.length / itemsPerPage) - 1, latestPage + 1))}
-                disabled={latestPage >= Math.ceil(data.latest.length / itemsPerPage) - 1}
-                className="p-1.5 rounded border border-white/10 bg-zinc-900 text-zinc-400 hover:text-orange-500 hover:border-orange-500/50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                title="Next"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+            <div className="flex flex-col gap-1">
+               <h2 className="text-xl font-black italic uppercase tracking-wider flex items-center gap-2">
+                 <span className="w-1 h-6 bg-orange-600 rounded-full"></span>
+                 Latest Updates
+               </h2>
+            </div>
+            <div className="flex items-center gap-4">
+              {onViewLatest && (
+                <button 
+                  onClick={onViewLatest}
+                  className="px-4 py-1.5 rounded bg-orange-600/10 text-orange-500 hover:bg-orange-600 hover:text-white transition-colors text-xs font-bold tracking-wider uppercase"
+                >
+                  View More
+                </button>
+              )}
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setLatestPage(Math.max(0, latestPage - 1))}
+                  disabled={latestPage === 0}
+                  className="p-1.5 rounded border border-white/10 bg-zinc-900 text-zinc-400 hover:text-orange-500 hover:border-orange-500/50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                  title="Previous"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={() => setLatestPage(Math.min(Math.ceil(data.latest.length / itemsPerPage) - 1, latestPage + 1))}
+                  disabled={latestPage >= Math.ceil(data.latest.length / itemsPerPage) - 1}
+                  className="p-1.5 rounded border border-white/10 bg-zinc-900 text-zinc-400 hover:text-orange-500 hover:border-orange-500/50 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                  title="Next"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
